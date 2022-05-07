@@ -28,14 +28,13 @@ int main() {
 	EasyArray<uint64_t> instructions = {
 		mach::jump_fn(31 - line_base),
 		mach::stop(),
-		mach::set_struct_reg(0x20ui32),
+		mach::set_struct_reg((uint32_t)0x20),
 		mach::set_long_immediate_target(0, (uint16_t)test.length()),
 		mach::process_immediate(*((const uint64_t*)(test.c_str()) + 0)), //The number of these process_immediate lines depend on the length of the string: floor((length + 7) / 8)
 		mach::process_immediate(*((const uint64_t*)(test.c_str()) + 1)),
-		mach::process_immediate(*((const uint64_t*)(test.c_str()) + 2)),
 		mach::print(0, 0),
-		mach::set_hash_reg(0ui32),
-		mach::set_struct_reg(0x15ui32),
+		mach::set_hash_reg((uint32_t)0),
+		mach::set_struct_reg((uint32_t)0x15),
 		mach::set_long_immediate_target(63, 1),
 		mach::process_immediate(0x00000000000000FF), //uint256 needs 4 * 64 bits
 		mach::process_immediate(0x0000000000000000),
@@ -48,13 +47,13 @@ int main() {
 		mach::clear(0),
 		mach::swap(1, 8, false),
 		mach::print(8, 0),
-		mach::set_struct_reg(0x13ui32),
+		mach::set_struct_reg((uint32_t)0x13),
 		mach::set_short_immediate_target(0),
 		mach::load_immediate_L(0),
 		mach::set_short_immediate_target(1),
 		mach::load_immediate_L((uint32_t)test.length()),
-		mach::set_index_reg(0ui32),
-		mach::NOP(), //LOOP: @(57 - line_base)
+		mach::set_index_reg((uint32_t)0),
+		mach::NOP(), //LOOP: @(56 - line_base)
 		mach::array_at_index(8, 7, 1),
 		mach::swap(0, 0x83, false),
 		mach::CMP(0, 1),

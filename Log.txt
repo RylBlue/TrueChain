@@ -1,0 +1,4 @@
+[main.cpp: 16] (INFO): Logging initialized---
+[Database_Parse.cpp: 141] (INFO): Found stored value from hash: 0xF0000000000000000000000000000000000000000000000000000000000000FF
+[Database_Parse.cpp: 141] (INFO): Found stored value from hash: 0xF0000000000000000000000000000000000000000000000000000000000000FF
+[Block_Machine.cpp: 167] (INFO): Stop instruction was executed: 2

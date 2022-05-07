@@ -97,6 +97,8 @@ public:
 	void sub_array_length_from_struct_reg(uint8_t array_reg, uint8_t out_reg);
 
 	void add_immediate(uint8_t lhs, int16_t rhs, bool CMP);
+
+	uint32_t get_program_counter() const;
 private:
 	void set_reg_mem(uint8_t regidx);
 	uint32_t get_register_structure_type(uint8_t reg) const;

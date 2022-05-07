@@ -78,7 +78,7 @@ void machine_stack::pop_count(EasyArray<uint8_t>* registers, uint32_t* reg_state
 }
 
 
-Block_Machine::Block_Machine() : hash_reg(0), struct_reg(0), gvar_reg(0), index_reg(0), flag_reg(0), return_reg(0), hash_index_reg(0ui32), program_counter(0), immediate_load(false), immediate_target(0xFF), immediate_byte_count(0), db(nullptr) {
+Block_Machine::Block_Machine() : hash_reg(0), struct_reg(0), gvar_reg(0), index_reg(0), flag_reg(0), return_reg(0), hash_index_reg((uint32_t)0), program_counter(0), immediate_load(false), immediate_target(0xFF), immediate_byte_count(0), db(nullptr) {
 	for (unsigned int i = 0; i < 128; ++i) {
 		R_state[i] = 0x10 | 0x03;
 		set_reg_mem(i);
@@ -137,7 +137,7 @@ void Block_Machine::clear_all_registers() {
 	index_reg = 0;
 	flag_reg = 0;
 	return_reg = 0;
-	hash_index_reg = 0ui32;
+	hash_index_reg = (uint32_t)0;
 	program_counter = 0;
 	immediate_load = false;
 	immediate_target = 0xFF;
@@ -162,6 +162,7 @@ void Block_Machine::set_reg_mem(uint8_t reg_idx) {
 
 void Block_Machine::run_till_stop(const EasyArray<uint64_t>& a) {//0xFFFF0000 in flag_reg, or out of code
 	while (true) {
+		//std::cout<<program_counter<<std::endl;
 		if (flag_reg >= 0xFFFF0000) {
 			Log::log_info(__LINE__, __FILE__, "Stop instruction was executed: " + std::to_string(program_counter));
 			return;
@@ -186,7 +187,7 @@ void Block_Machine::run_next_line(uint64_t a) {
 		++program_counter;
 		return;
 	}
-
+	
 	uint32_t Uw = a>>32;
 	uint32_t Lw = a & 0xFFFFFFFF;
 
@@ -287,7 +288,7 @@ void Block_Machine::run_next_line(uint64_t a) {
 		conditional_stop(uint16_r12);
 		++program_counter;
 		return;
-	case 0b00000000000000000000000001111111:
+	case 0b00000000000000000000000001111111: //jump_fn
 		jump_fn(Lw);
 		return;
 	case 0b00000000000000000000000010000000: //struct_load
@@ -1018,7 +1019,7 @@ void Block_Machine::push(uint8_t reg1, uint8_t reg2, uint8_t reg3, uint8_t reg4)
 			EasyArray<uint8_t> temp_arr = EasyArray<uint8_t>(32);
 			*((uint256_t*)temp_arr.data) = hash_index_reg;
 			stack.push_value(temp_reg, 0x15, temp_arr);
-			hash_index_reg = 0ui32;
+			hash_index_reg = (uint32_t)0;
 			continue;
 		}
 		uint32_t to_push = 0;
@@ -1387,7 +1388,7 @@ void Block_Machine::add_immediate(uint8_t lhs, int16_t rhs, bool CMP) {
 		return;
 	}
 
-	uint64_t left = 0ui32;
+	uint64_t left = (uint32_t)0;
 	int64_t right = rhs;
 
 	switch (R_state[lhs]) {
@@ -1419,4 +1420,8 @@ void Block_Machine::add_immediate(uint8_t lhs, int16_t rhs, bool CMP) {
 	}
 	return;
 
+}
+
+uint32_t Block_Machine::get_program_counter() const{
+	return program_counter;
 }
