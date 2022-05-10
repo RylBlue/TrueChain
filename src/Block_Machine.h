@@ -113,7 +113,7 @@ private:
 	uint32_t gvar_reg; //Global variable to access
 	uint32_t index_reg;
 	uint32_t flag_reg; //Updated by comparisons
-	uint32_t return_reg; //Where to jump to on function return
+	uint32_t return_reg; //Where to jump to on function return (DEPRECATED, actually handled by popping the program_counter from the stack now)
 	uint256_t hash_index_reg; //Hash table access index
 	uint32_t program_counter;
 	bool immediate_load;

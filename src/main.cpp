@@ -4,6 +4,7 @@
 #include "Logging.h"
 #include "Block_Machine.h"
 #include "Block_Machine_Assembler.h"
+#include "Keccak.h"
 
 #define PREHASH_MAP_LENG 100000
 
@@ -65,8 +66,16 @@ int main() {
 		mach::jump_return(),
 	};
 
-	m.run_till_stop(instructions);
+	//m.run_till_stop(instructions);
 
 	m.disconnect();
 	std::cout << dbs.getSize() << std::endl;
+
+	double test_d = 0.0;
+	uint256_t temp256_0 = custom_keccak256(sizeof(double), (const uint8_t*) &test_d, (uint32_t)0);
+	uint256_t temp256_1 = custom_keccak256(sizeof(double), (const uint8_t*) &test_d, (uint32_t)1); 
+	uint256_t temp256_2 = custom_keccak256(0, nullptr, (uint32_t)0);
+	std::cout<<temp256_0<<std::endl;
+	std::cout<<temp256_1<<std::endl;
+	std::cout<<temp256_2<<std::endl;
 }

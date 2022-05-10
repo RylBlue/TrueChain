@@ -5,28 +5,31 @@
 
 #include <mutex>
 
-bool info = true;
+namespace Log{
+	bool info = true;
 
-bool debug = false;
+	bool debug = false;
 
-bool use_console = true;
+	bool use_console = true;
 
-std::string trimmer = __FILE__;
+	std::string trimmer = __FILE__;
 
-std::mutex log_mutex;
+	std::mutex log_mutex;
 
-bool use_log_file = false;
+	bool use_log_file = false;
 
-std::ofstream log_file;
+	std::ofstream log_file;
 
-std::string path_trim(std::string file_path) {
-	unsigned int i = 0;
-	for (; i < file_path.length() && i < trimmer.length(); ++i) {
-		if (trimmer.at(i) != file_path.at(i)) {
-			break;
+
+	std::string path_trim(std::string file_path) {
+		unsigned int i = 0;
+		for (; i < file_path.length() && i < trimmer.length(); ++i) {
+			if (trimmer.at(i) != file_path.at(i)) {
+				break;
+			}
 		}
+		return file_path.substr(i, file_path.length());
 	}
-	return file_path.substr(i, file_path.length());
 }
 
 void Log::set_info_state(bool b) {
