@@ -18,6 +18,9 @@ uint64_t mach::set_type_and_clear(uint8_t clear_reg) {
 uint64_t mach::swap(uint8_t lhs, uint8_t rhs, bool CMP) {
 	return ((uint64_t)0b00000000000000000000000000000100 << 32) | (0 << 24) | (CMP ? 1 : 0 << 16) | ((uint64_t)rhs << 8) | (lhs);
 }
+uint64_t mach::set(uint8_t lhs, uint8_t rhs, bool CMP) {
+	return ((uint64_t)0b00000000000000000000000000000101 << 32) | (0 << 24) | (CMP ? 1 : 0 << 16) | ((uint64_t)rhs << 8) | (lhs);
+}
 uint64_t mach::print(uint8_t reg, uint16_t print_flags) {
 	return ((uint64_t)0b00000000000000000000000000001000 << 32) | (0 << 24) | (0 << 16) | ((uint64_t)print_flags << 8) | (reg);
 }
@@ -144,4 +147,8 @@ uint64_t mach::sub_array_length_from_struct_reg(uint8_t array_reg, uint8_t out_r
 
 uint64_t mach::add_immediate(uint8_t reg, int16_t immediate, bool CMP) {
 	return ((uint64_t)0b00000000000000000000010000000000 << 32) | (CMP ? 1 : 0 << 24) | (0 << 16) | ((uint64_t)(uint16_t)immediate << 8) | (reg);
+}
+
+uint64_t mach::keccak256(uint8_t reg){
+	return ((uint64_t)0b00000000000000000000100000000000 << 32 ) | (0 << 24) | (0 << 16) | (0 << 8) | (reg);
 }

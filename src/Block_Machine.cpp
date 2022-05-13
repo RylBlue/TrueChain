@@ -1,6 +1,7 @@
 #include <iomanip>
 #include "Block_Machine.h"
 #include "Logging.h"
+#include "Keccak.h"
 
 #define STACK_BUFFER_LENGTH 100000
 
@@ -220,6 +221,10 @@ void Block_Machine::run_next_line(uint64_t a) {
 		swap(reg1, reg2, bool(reg3) || bool(reg4));
 		++program_counter;
 		return;
+	case 0b00000000000000000000000000000101: //set
+		set(reg1, reg2, bool(reg3) || bool(reg4));
+		++program_counter;
+		return;
 	case 0b00000000000000000000000000001000: //print
 		print(reg1, uint16_r23);
 		++program_counter;
@@ -379,6 +384,10 @@ void Block_Machine::run_next_line(uint64_t a) {
 		add_immediate(reg1, uint16_r23, (bool)reg4);
 		++program_counter;
 		return;
+	case 0b00000000000000000000100000000000:
+		keccak256(reg1);
+		++program_counter;
+		return;
 	default:
 		Log::log_error_quit(__LINE__, __FILE__, "Invalid command parsed: " + cmd_to_hex_string(Uw, Lw));
 		return;
@@ -406,6 +415,9 @@ void Block_Machine::swap(uint8_t lhs, uint8_t rhs, bool CMP) {
 	uint32_t temp_32;
 	uint256_t temp_256;
 	uint8_t* data;
+	if(CMP){
+		Block_Machine::CMP(lhs, rhs);
+	}
 	if (lhs < 128) {
 		if (rhs < 128) {
 			R[lhs].swap(R[rhs]);
@@ -467,7 +479,7 @@ void Block_Machine::swap(uint8_t lhs, uint8_t rhs, bool CMP) {
 		return;
 	}
 	if (rhs < 128) {
-		Log::conditional_log_quit(R_state[lhs] != get_register_structure_type(rhs), __LINE__, __FILE__, "Invalid swap RHS");
+		Log::conditional_log_quit(R_state[rhs] != get_register_structure_type(lhs), __LINE__, __FILE__, "Invalid swap RHS");
 		data = R[rhs].data;
 		switch (lhs) {
 		case 0x80:  //hash_reg
@@ -511,12 +523,96 @@ void Block_Machine::swap(uint8_t lhs, uint8_t rhs, bool CMP) {
 			*((uint32_t*)data) = temp_32;
 			return;
 		default:
-			Log::log_error_quit(__LINE__, __FILE__, "Invalid swap rhs register: " + reg_to_hex_string(lhs));
+			Log::log_error_quit(__LINE__, __FILE__, "Invalid swap rhs register: " + reg_to_hex_string(rhs));
 			return;
 		}
 	}
 
 	Log::log_warning(__LINE__, __FILE__, "Cannot swap two non base registers: lhs: " + reg_to_hex_string(lhs) + " rhs: " + reg_to_hex_string(rhs));
+}
+
+void Block_Machine::set(uint8_t lhs, uint8_t rhs, bool CMP){
+	//lhs -> rhs
+	uint8_t* data;
+	if(CMP){
+		Block_Machine::CMP(lhs, rhs);
+	}
+	if (lhs < 128) {
+		if (rhs < 128) {
+			R[rhs] = R[lhs];
+			R_state[rhs] = R_state[lhs];
+			return;
+		}
+		Log::conditional_log_quit(R_state[lhs]!=get_register_structure_type(rhs), __LINE__, __FILE__, "Invalid set LHS");
+
+		data = R[lhs].data;
+
+		switch (rhs) {
+		case 0x80:  //hash_reg
+			hash_reg = *((uint32_t*)data);
+			return;
+		case 0x81:  //struct_reg
+			struct_reg = *((uint32_t*)data);
+			return;
+		case 0x82:  //gvar_reg
+			gvar_reg = *((uint32_t*)data);
+			return;
+		case 0x83:  //index_reg
+			index_reg = *((uint32_t*)data);
+			return;
+		case 0x84:  //flag_reg
+			flag_reg = *((uint32_t*)data);
+			return;
+		case 0x85:  //return_reg
+			return_reg = *((uint32_t*)data);
+			return;
+		case 0x86:  //hash_index_reg
+			hash_index_reg = data;
+			return;
+		case 0x87:  //program_counter
+			program_counter = *((uint32_t*)data);
+			return;
+		default:
+			Log::log_error_quit(__LINE__, __FILE__, "Invalid set rhs register: "+ reg_to_hex_string(rhs));
+			return;
+		}
+		return;
+	}
+	if (rhs < 128) {
+		Log::conditional_log_quit(R_state[rhs] != get_register_structure_type(lhs), __LINE__, __FILE__, "Invalid set RHS");
+		data = R[rhs].data;
+		switch (lhs) {
+		case 0x80:  //hash_reg
+			*((uint32_t*)data) = hash_reg;
+			return;
+		case 0x81:  //struct_reg
+			*((uint32_t*)data) = struct_reg;
+			return;
+		case 0x82:  //gvar_reg
+			*((uint32_t*)data) = gvar_reg;
+			return;
+		case 0x83:  //index_reg
+			*((uint32_t*)data) = index_reg;
+			return;
+		case 0x84:  //flag_reg
+			*((uint32_t*)data) = flag_reg;
+			return;
+		case 0x85:  //return_reg
+			*((uint32_t*)data) = return_reg;
+			return;
+		case 0x86:  //hash_index_reg
+			*((uint256_t*)data) = hash_index_reg;
+			return;
+		case 0x87:  //program_counter
+			*((uint32_t*)data) = program_counter;
+			return;
+		default:
+			Log::log_error_quit(__LINE__, __FILE__, "Invalid set lhs register: " + reg_to_hex_string(lhs));
+			return;
+		}
+	}
+
+	Log::log_warning(__LINE__, __FILE__, "Cannot set two non base registers: lhs: " + reg_to_hex_string(lhs) + " rhs: " + reg_to_hex_string(rhs));
 }
 
 void Block_Machine::print(uint8_t reg, uint16_t print_flags) {
@@ -1424,4 +1520,9 @@ void Block_Machine::add_immediate(uint8_t lhs, int16_t rhs, bool CMP) {
 
 uint32_t Block_Machine::get_program_counter() const{
 	return program_counter;
+}
+void Block_Machine::keccak256(uint8_t reg){
+	Log::conditional_log_quit(reg>=128, __LINE__, __FILE__, "keccak256 invalid target reg");
+	//prehash = R_state[reg]
+	hash_index_reg = custom_keccak256(R[reg].length, R[reg].data, R_state[reg]);
 }

@@ -47,6 +47,7 @@ public:
 	void reinterpret(uint8_t reg, uint8_t prim_type);
 	void set_type_and_clear(uint8_t clear_reg);
 	void swap(uint8_t lhs, uint8_t rhs, bool CMP);
+	void set(uint8_t lhs, uint8_t rhs, bool CMP);
 	void print(uint8_t reg, uint16_t print_flags);
 	void add(uint8_t lhs, uint8_t rhs, uint8_t out_reg, bool CMP);
 	void sub(uint8_t lhs, uint8_t rhs, uint8_t out_reg, bool CMP);
@@ -97,6 +98,8 @@ public:
 	void sub_array_length_from_struct_reg(uint8_t array_reg, uint8_t out_reg);
 
 	void add_immediate(uint8_t lhs, int16_t rhs, bool CMP);
+
+	void keccak256(uint8_t reg);
 
 	uint32_t get_program_counter() const;
 private:

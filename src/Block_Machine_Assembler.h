@@ -7,6 +7,7 @@ namespace mach {
 	uint64_t reinterpret(uint8_t reg, uint8_t prim_type);
 	uint64_t set_type_and_clear(uint8_t clear_reg);
 	uint64_t swap(uint8_t lhs, uint8_t rhs, bool CMP);
+	uint64_t set(uint8_t lhs, uint8_t rhs, bool CMP);
 	uint64_t print(uint8_t reg, uint16_t print_flags);
 	uint64_t add(uint8_t lhs, uint8_t rhs, uint8_t out_reg, bool CMP);
 	uint64_t sub(uint8_t lhs, uint8_t rhs, uint8_t out_reg, bool CMP);
@@ -49,4 +50,5 @@ namespace mach {
 	uint64_t sub_array(uint8_t array_reg, uint8_t out_reg, uint16_t length);
 	uint64_t sub_array_length_from_struct_reg(uint8_t array_reg, uint8_t out_reg);
 	uint64_t add_immediate(uint8_t reg, int16_t immediate, bool CMP);
+	uint64_t keccak256(uint8_t reg);
 }

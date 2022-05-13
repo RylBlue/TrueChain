@@ -9,7 +9,6 @@
 //2^L = W
 #define VAR_N 24
 //N = 12 + 2*L
-#define VAR_R 100
 
 //w is the length of each "lane" in bits
 //This entire file assumes that w is 64

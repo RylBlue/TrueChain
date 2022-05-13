@@ -46,15 +46,22 @@ public:
 	uint64_t getSize() const;
 };
 
+struct hash_and_value{
+public:
+	uint256_t hash;
+	uint32_t length;
+	const uint8_t* value;
+};
+
 struct hash_map : public sizeable {
 public:
 	hash_map();
-	hash_map(uint64_t element_size, uint32_t partial_hash_size);
+	hash_map(uint32_t element_size, uint32_t partial_hash_size);
 	void set_at(const uint256_t& h, const EasyArray<uint8_t>& a);
 	const EasyArray<uint8_t>* get_at(const uint256_t& h) const;
 	uint64_t getSize() const;
-private:
-	uint64_t type_size; //in bytes
+//private:
+	uint32_t type_size; //in bytes
 	EasyArray<index_and_map> partial_hash_map;
 };
 
@@ -77,7 +84,8 @@ public:
 	void hash_unmap(uint32_t hash_index, const uint256_t& h, EasyArray<uint8_t>& out) const;
 	void set_map_data(uint32_t hash_index, const uint256_t& h, const EasyArray<uint8_t>& data) const;
 	
-
+	void state_to_file(std::string pathname) const;
+	void file_to_state(std::string pathname, uint32_t hash_base_leng);
 };
 
 uint32_t get_default_primitive_byte_size(uint32_t prim_index);

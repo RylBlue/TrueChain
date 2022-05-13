@@ -1,4 +1,5 @@
 #include <iostream>
+#include <chrono>
 #include "Dual_Tree.h"
 #include "Database_Parse.h"
 #include "Logging.h"
@@ -25,9 +26,8 @@ int main() {
 
 	std::string test = "Hello world!";
 
-	uint32_t line_base = __LINE__ + 2;
 	EasyArray<uint64_t> instructions = {
-		mach::jump_fn(31 - line_base),
+		mach::jump_fn(2), //function call two instructions ahead
 		mach::stop(),
 		mach::set_struct_reg((uint32_t)0x20),
 		mach::set_long_immediate_target(0, (uint16_t)test.length()),
@@ -56,26 +56,40 @@ int main() {
 		mach::set_index_reg((uint32_t)0),
 		mach::NOP(), //LOOP: @(56 - line_base)
 		mach::array_at_index(8, 7, 1),
-		mach::swap(0, 0x83, false),
+		mach::set(0x83, 0, false),
 		mach::CMP(0, 1),
-		mach::swap(0, 0x83, false),
 		mach::print(0x07, 0),
-		mach::conditional_jump(0x04 << 8, -6), //jump not equal //LOOP: 6 lines up
+		mach::conditional_jump(0x04 << 8, -5), //jump not equal //LOOP: 5 lines up
 		mach::hash_store(8),
 		mach::hash_load(8),
+		mach::keccak256(8),
+		mach::print(0x86, 0),
+		mach::hash_store(8),
+		mach::set_index_reg((uint32_t)0),
 		mach::jump_return(),
 	};
 
-	//m.run_till_stop(instructions);
+	m.run_till_stop(instructions);
 
 	m.disconnect();
 	std::cout << dbs.getSize() << std::endl;
 
-	double test_d = 0.0;
-	uint256_t temp256_0 = custom_keccak256(sizeof(double), (const uint8_t*) &test_d, (uint32_t)0);
-	uint256_t temp256_1 = custom_keccak256(sizeof(double), (const uint8_t*) &test_d, (uint32_t)1); 
-	uint256_t temp256_2 = custom_keccak256(0, nullptr, (uint32_t)0);
-	std::cout<<temp256_0<<std::endl;
-	std::cout<<temp256_1<<std::endl;
-	std::cout<<temp256_2<<std::endl;
+	//std::chrono::time_point t0 = std::chrono::high_resolution_clock::now();
+	//for(uint32_t i = 0; i<100000; ++i){
+	//	m.keccak256(8);
+	//}
+	//std::chrono::time_point t1 = std::chrono::high_resolution_clock::now();
+	//std::cout << std::chrono::duration_cast<std::chrono::microseconds>(t1-t0).count() << std::endl;
+
+	dbs.state_to_file("Database.blkdb");
+	dbs.file_to_state("Database.blkdb", PREHASH_MAP_LENG);
+	dbs.state_to_file("ToCompare.blkdb");
+
+	//double test_d = 0.0;
+	//uint256_t temp256_0 = custom_keccak256(sizeof(double), (const uint8_t*) &test_d, (uint32_t)0);
+	//uint256_t temp256_1 = custom_keccak256(sizeof(double), (const uint8_t*) &test_d, (uint32_t)1); 
+	//uint256_t temp256_2 = custom_keccak256(0, nullptr, (uint32_t)0);
+	//std::cout<<temp256_0<<std::endl;
+	//std::cout<<temp256_1<<std::endl;
+	//std::cout<<temp256_2<<std::endl;
 }
