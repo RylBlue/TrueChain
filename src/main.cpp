@@ -16,8 +16,21 @@ int main() {
 	Log::set_info_state(true);
 
 	Log::log_info(__LINE__, __FILE__, "Logging initialized---");
+	structure_definition d1, d2;
+	d1.element_count = 2;
+	d1.struct_size = 5;
+	d1.element_type = {{0x11, 1}, {0x13, 4}};
+	d1.byte_offset = {0, 1};
 
-	database_state dbs = database_state({}, {0 | 0x20, 1, 2, 0x13}, {}, PREHASH_MAP_LENG);
+	d2.element_count = 2;
+	d2.struct_size = 10;
+	d2.element_type = {{0x10000000, 5},{0x10000000, 5}};
+	d2.byte_offset = {0, 5};
+	EasyArray<structure_definition> t(2);
+	t.data[0] = d1;
+	t.data[1] = d2;
+	database_state dbs = database_state(t, {0 | 0x20, 1, 2, 0x13}, {}, PREHASH_MAP_LENG);
+	
 	std::cout << dbs.getSize() << std::endl;
 
 
@@ -92,4 +105,5 @@ int main() {
 	//std::cout<<temp256_0<<std::endl;
 	//std::cout<<temp256_1<<std::endl;
 	//std::cout<<temp256_2<<std::endl;
+	
 }

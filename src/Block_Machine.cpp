@@ -148,7 +148,7 @@ void Block_Machine::set_reg_mem(uint8_t reg_idx) {
 	Log::conditional_log_quit(reg_idx >= 128, __LINE__, __FILE__, "Invalid reg index to set_reg_mem: "+std::to_string((unsigned int) reg_idx));
 
 	uint32_t type = R_state[reg_idx];
-	if (type< 0x1000000000000000) {
+	if (type< 0x10000000) {
 		R[reg_idx].new_length(0, 0);
 		R[reg_idx].new_length(get_default_primitive_byte_size(R_state[reg_idx]), 0);
 		return;
@@ -726,8 +726,8 @@ void Block_Machine::add(uint8_t lhs, uint8_t rhs, uint8_t out_reg, bool CMP) {
 		*(double*)R[out_reg].data = left + right;
 		return;
 	}
-	bool extend_sign_L = (R_state[lhs] < 0x1000000000000000) && ((R_state[lhs] & 0x10) == 0);
-	bool extend_sign_R = (R_state[rhs] < 0x1000000000000000) && ((R_state[rhs] & 0x10) == 0);
+	bool extend_sign_L = (R_state[lhs] < 0x10000000) && ((R_state[lhs] & 0x10) == 0);
+	bool extend_sign_R = (R_state[rhs] < 0x10000000) && ((R_state[rhs] & 0x10) == 0);
 
 	uint16_t carry = 0;
 	uint16_t l = 0;
@@ -824,7 +824,7 @@ void Block_Machine::sub(uint8_t lhs, uint8_t rhs, uint8_t out_reg, bool CMP) {
 		*(double*)R[out_reg].data = left + right;
 		return;
 	}
-	bool extend_sign_L = (R_state[lhs] < 0x1000000000000000) && ((R_state[lhs] & 0x10) == 0);
+	bool extend_sign_L = (R_state[lhs] < 0x10000000) && ((R_state[lhs] & 0x10) == 0);
 	bool extend_sign_R = true;
 
 	uint16_t carry = 0;
@@ -1023,7 +1023,7 @@ void Block_Machine::CMP(uint8_t lhs, uint8_t rhs) {
 	case 0x02: true_mask &= ~0x10; true_mask &= ~0x08; break;
 	}
 
-	if (R_state[lhs] >= 0x1000000000000000 || R_state[rhs] >= 0x1000000000000000 || ((R_state[lhs]&0x10) && (R_state[rhs]&0x10)) || R_state[lhs]&0x20 || R_state[rhs]&0x20) {
+	if (R_state[lhs] >= 0x10000000 || R_state[rhs] >= 0x10000000 || ((R_state[lhs]&0x10) && (R_state[rhs]&0x10)) || R_state[lhs]&0x20 || R_state[rhs]&0x20) {
 		flag_reg |= true_mask;
 		return;
 	}
@@ -1056,7 +1056,7 @@ void Block_Machine::CMP(uint8_t lhs, uint8_t rhs) {
 void Block_Machine::parse_from_struct(uint8_t struct_reg, uint16_t var_index, uint8_t out_reg) {
 	Log::conditional_log_quit(db == nullptr, __LINE__, __FILE__, "parse_from_struct no database connection!");
 	Log::conditional_log_quit(struct_reg >= 128 || out_reg >= 128, __LINE__, __FILE__, "parse_from_struct invalid register indexes");
-	Log::conditional_log_quit(R_state[struct_reg] < 0x1000000000000000, __LINE__, __FILE__, "parse_from_struct a primitive is not a struct!");
+	Log::conditional_log_quit(R_state[struct_reg] < 0x10000000, __LINE__, __FILE__, "parse_from_struct a primitive is not a struct!");
 	const structure_definition* struct_def = (db->get_structure_def(R_state[struct_reg]));
 	Log::conditional_log_quit(struct_def == nullptr, __LINE__, __FILE__, "parse_from_struct nullptr for struct_def");
 	Log::conditional_log_quit(struct_def->element_count <= var_index, __LINE__, __FILE__, "parse_from_struct invalid struct var index");
@@ -1069,7 +1069,7 @@ void Block_Machine::parse_from_struct(uint8_t struct_reg, uint16_t var_index, ui
 void Block_Machine::push_to_struct(uint8_t struct_reg, uint16_t var_index, uint8_t in_reg) {
 	Log::conditional_log_quit(db == nullptr, __LINE__, __FILE__, "push_to_struct no database connection!");
 	Log::conditional_log_quit(struct_reg >= 128 || in_reg >= 128, __LINE__, __FILE__, "push_to_struct invalid register indexes");
-	Log::conditional_log_quit(R_state[struct_reg] < 0x1000000000000000, __LINE__, __FILE__, "push_to_struct a primitive is not a struct!");
+	Log::conditional_log_quit(R_state[struct_reg] < 0x10000000, __LINE__, __FILE__, "push_to_struct a primitive is not a struct!");
 	const structure_definition* struct_def = (db->get_structure_def(R_state[struct_reg]));
 	Log::conditional_log_quit(struct_def == nullptr, __LINE__, __FILE__, "push_to_struct nullptr for struct_def");
 	Log::conditional_log_quit(struct_def->element_count <= var_index, __LINE__, __FILE__, "push_to_struct invalid struct var index");
@@ -1286,7 +1286,7 @@ void Block_Machine::set_long_immediate_target(uint8_t load_reg, uint16_t prim_co
 	Log::conditional_log_quit(!(load_reg < 128), __LINE__, __FILE__, "Inavlid short immediate target: 0x" + reg_to_hex_string(load_reg));
 	immediate_target = load_reg;
 	R_state[load_reg] = struct_reg;
-	if (struct_reg < 0x1000000000000000 && (struct_reg&0x20)) {
+	if (struct_reg < 0x10000000 && (struct_reg&0x20)) {
 		uint32_t byte_count = get_default_primitive_byte_size(struct_reg ^ 0x20) * prim_count;
 		R[load_reg].new_length(0, 0);
 		R[load_reg].new_length(byte_count, 0);
@@ -1310,7 +1310,7 @@ void Block_Machine::process_immediate(uint64_t Dw) {
 
 void Block_Machine::append(uint8_t lower_array, uint8_t upper_array, uint8_t out_reg, bool CMP) {
 	Log::conditional_log_quit(lower_array>=128 || upper_array>=128 || out_reg>=128, __LINE__, __FILE__, "append invalid register indexes");
-	Log::conditional_log_quit(R_state[lower_array] >= 0x1000000000000000, __LINE__, __FILE__, "append non-primitive type");
+	Log::conditional_log_quit(R_state[lower_array] >= 0x10000000, __LINE__, __FILE__, "append non-primitive type");
 	Log::conditional_log_quit((R_state[lower_array] & ((~0) ^ 0x20)) != (R_state[upper_array] & ((~0) ^ 0x20)), __LINE__, __FILE__, "append unequal register types");
 	if (CMP) {
 		Block_Machine::CMP(lower_array, upper_array);
@@ -1331,7 +1331,7 @@ void Block_Machine::append(uint8_t lower_array, uint8_t upper_array, uint8_t out
 
 void Block_Machine::array_at_index(uint8_t array_reg, uint8_t out_reg, int16_t index_travel) {
 	Log::conditional_log_quit(array_reg >= 128  || out_reg >= 128, __LINE__, __FILE__, "array_at_index invalid register indexes");
-	Log::conditional_log_quit(R_state[array_reg] >= 0x1000000000000000 || !(R_state[array_reg] & 0x20), __LINE__, __FILE__, "array_at_index non-primitive type or non array");
+	Log::conditional_log_quit(R_state[array_reg] >= 0x10000000 || !(R_state[array_reg] & 0x20), __LINE__, __FILE__, "array_at_index non-primitive type or non array");
 
 	uint32_t type_leng = get_default_primitive_byte_size(R_state[array_reg] ^ 0x20);
 
@@ -1346,7 +1346,7 @@ void Block_Machine::array_at_index(uint8_t array_reg, uint8_t out_reg, int16_t i
 
 void Block_Machine::sub_array(uint8_t array_reg, uint8_t out_reg, uint16_t length) {
 	Log::conditional_log_quit(array_reg >= 128 || out_reg >= 128, __LINE__, __FILE__, "sub_array invalid register indexes");
-	Log::conditional_log_quit(R_state[array_reg] >= 0x1000000000000000 || !(R_state[array_reg] & 0x20), __LINE__, __FILE__, "sub_array non-primitive type or non array");
+	Log::conditional_log_quit(R_state[array_reg] >= 0x10000000 || !(R_state[array_reg] & 0x20), __LINE__, __FILE__, "sub_array non-primitive type or non array");
 
 	uint32_t type_leng = get_default_primitive_byte_size(R_state[array_reg] ^ 0x20);
 
@@ -1359,7 +1359,7 @@ void Block_Machine::sub_array(uint8_t array_reg, uint8_t out_reg, uint16_t lengt
 
 void Block_Machine::sub_array_length_from_struct_reg(uint8_t array_reg, uint8_t out_reg) {
 	Log::conditional_log_quit(array_reg >= 128 || out_reg >= 128, __LINE__, __FILE__, "sub_array invalid register indexes");
-	Log::conditional_log_quit(R_state[array_reg] >= 0x1000000000000000 || !(R_state[array_reg] & 0x20), __LINE__, __FILE__, "sub_array non-primitive type or non array");
+	Log::conditional_log_quit(R_state[array_reg] >= 0x10000000 || !(R_state[array_reg] & 0x20), __LINE__, __FILE__, "sub_array non-primitive type or non array");
 
 	uint32_t type_leng = get_default_primitive_byte_size(R_state[array_reg] ^ 0x20);
 
@@ -1479,7 +1479,7 @@ uint32_t Block_Machine::get_register_structure_type(uint8_t reg) const{
 
 void Block_Machine::add_immediate(uint8_t lhs, int16_t rhs, bool CMP) {
 	Log::conditional_log_quit(lhs >= 128, __LINE__, __FILE__, "add_immediate invalid lhs reg");
-	Log::conditional_log_quit(R_state[lhs] >= 0x1000000000000000, __LINE__, __FILE__, "add_immediate invalid lhs type");
+	Log::conditional_log_quit(R_state[lhs] >= 0x10000000, __LINE__, __FILE__, "add_immediate invalid lhs type");
 	if (rhs == 0) {
 		return;
 	}

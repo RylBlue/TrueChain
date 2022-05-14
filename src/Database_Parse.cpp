@@ -2,6 +2,14 @@
 #include "Logging.h"
 #include <string>
 
+
+void structure_definition::operator=(const structure_definition& a){
+	element_count = a.element_count;
+	struct_size = a.struct_size;
+	byte_offset = a.byte_offset;
+	element_type = a.element_type;
+}
+
 hash_map::hash_map(uint32_t element_size, uint32_t partial_hash_size) : type_size(element_size), partial_hash_map(partial_hash_size) {}
 
 hash_map::hash_map() {
@@ -12,7 +20,7 @@ const EasyArray<uint8_t>* hash_map::get_at(const uint256_t& a) const{
 	const index_and_map& temp = partial_hash_map.data[(a%partial_hash_map.length)];
 	const EasyArray<uint8_t>* temp_ptr = temp.get_at(a);
 	return temp_ptr;
-}
+};
 
 void hash_map::set_at(const uint256_t& a, const EasyArray<uint8_t>& d) {
 	partial_hash_map.data[(a % partial_hash_map.length)].set_at(a, d);
@@ -106,9 +114,9 @@ bool validate_primitive_length(uint32_t prim_index, uint32_t length) {
 }
 
 const structure_definition* database_state::get_structure_def(uint32_t structure_index) const {
-	Log::conditional_log_quit(structure_index < 0x1000000000000000, __LINE__, __FILE__, "Invalid structure index: "+ std::to_string(structure_index));
+	Log::conditional_log_quit(structure_index < 0x10000000, __LINE__, __FILE__, "Invalid structure index: "+ std::to_string(structure_index));
 	Log::conditional_log_quit(structure_index >= structures.length, __LINE__, __FILE__, "Structure index: "+ std::to_string(structure_index) + " Structure length: "+std::to_string(structures.length));
-	return &(structures.data[structure_index - 0x1000000000000000]);
+	return &(structures.data[structure_index - 0x10000000]);
 }
 
 uint32_t database_state::get_hash_structure_index(uint32_t hash_index) const {
@@ -120,7 +128,7 @@ uint32_t database_state::get_hash_structure_index(uint32_t hash_index) const {
 void database_state::hash_unmap(uint32_t hash_index, const uint256_t& h, EasyArray<uint8_t>& out) const {
 	uint32_t struct_index = get_hash_structure_index(hash_index);
 	const structure_definition* struct_def = nullptr;
-	if (struct_index >= 0x1000000000000000) {
+	if (struct_index >= 0x10000000) {
 		struct_def = get_structure_def(struct_index);
 		Log::conditional_log_quit(struct_def == nullptr, __LINE__, __FILE__, "Nullptr struct def? How?");
 	}
@@ -146,7 +154,7 @@ void database_state::hash_unmap(uint32_t hash_index, const uint256_t& h, EasyArr
 void database_state::set_map_data(uint32_t hash_index, const uint256_t& h, const EasyArray<uint8_t>& data) const {
 	uint32_t struct_index = get_hash_structure_index(hash_index);
 	const structure_definition* struct_def;
-	if (struct_index >= 0x1000000000000000) {
+	if (struct_index >= 0x10000000) {
 		struct_def = get_structure_def(struct_index);
 		Log::conditional_log_quit(struct_def == nullptr, __LINE__, __FILE__, "Nullptr struct def? How?");
 		Log::conditional_log_quit(struct_def->struct_size != data.length, __LINE__, __FILE__, "Invalid struct data length passed to set_map_data. Expected: "+std::to_string(struct_def->struct_size) + " Received: " + std::to_string(data.length));
@@ -168,7 +176,7 @@ database_state::database_state(const EasyArray<structure_definition>& structs, c
 
 	for (uint32_t i = 0; i < hash_maps.length; ++i) {
 		uint32_t index = get_hash_structure_index(i);
-		if (index >= 0x1000000000000000) {
+		if (index >= 0x10000000) {
 			const structure_definition* def = get_structure_def(index);
 			hash_maps.data[i] = hash_map(def->struct_size, hash_base_leng);
 			continue;
@@ -196,7 +204,7 @@ void database_state::state_to_file(std::string pathname) const{
 	for(uint32_t i = 0; i<structures.length; ++i){
 		writer::wui16(structures.data[i].element_count);
 		writer::wui32(structures.data[i].struct_size);
-		for(uint32_t ii = 0; ii< structures.data[i].element_count; ++i){
+		for(uint32_t ii = 0; ii< structures.data[i].element_count; ++ii){
 			writer::wui32(structures.data[i].byte_offset.data[ii]);
 			writer::wui32(structures.data[i].element_type.data[ii].type_index);
 			writer::wui32(structures.data[i].element_type.data[ii].length);

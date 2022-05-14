@@ -8,7 +8,7 @@
 
 struct type_definition {
 public:
-	uint32_t type_index; //Primitive range is: [0x0000000000000000, 0x1000000000000000),     Structure range is: [0x1000000000000000, 0xFFFFFFFFFFFFFFFF]
+	uint32_t type_index; //Primitive range is: [0x00000000, 0x10000000),     Structure range is: [0x10000000, 0xFFFFFFFF]
 	uint32_t length;
 };
 
@@ -19,6 +19,7 @@ public:
 	EasyArray<uint32_t> byte_offset; //byte_offset for each element
 	EasyArray<type_definition> element_type;
 	uint64_t getSize() const;
+	void operator=(const structure_definition& a);
 };
 
 
@@ -69,9 +70,9 @@ public:
 
 struct database_state : public sizeable {
 private:
-	EasyArray<structure_definition> structures; //Indexed as (type_index - 0x1000000000000000)
+	EasyArray<structure_definition> structures; //Indexed as (type_index - 0x10000000)
 	EasyArray<hash_map> hash_maps;
-	EasyArray<uint32_t> hash_map_type_indexes; //Match the type index seen here to the structures array above (if value is >= 0x1000000000000000) 
+	EasyArray<uint32_t> hash_map_type_indexes; //Match the type index seen here to the structures array above (if value is >= 0x10000000) 
 	EasyArray<index_and_map> global_variables;
 public:
 	database_state();
