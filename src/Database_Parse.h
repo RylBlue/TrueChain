@@ -87,6 +87,8 @@ public:
 	
 	void state_to_file(std::string pathname) const;
 	void file_to_state(std::string pathname, uint32_t hash_base_leng);
+
+	bool validate_state() const;
 };
 
 uint32_t get_default_primitive_byte_size(uint32_t prim_index);

@@ -41,10 +41,10 @@ int main() {
 
 	EasyArray<uint64_t> instructions = {
 		mach::jump_fn(2), //function call two instructions ahead
-		mach::stop(),
+		mach::stop(), //stops execution
 		mach::set_struct_reg((uint32_t)0x20),
 		mach::set_long_immediate_target(0, (uint16_t)test.length()),
-		mach::process_immediate(*((const uint64_t*)(test.c_str()) + 0)), //The number of these process_immediate lines depend on the length of the string: floor((length + 7) / 8)
+		mach::process_immediate(*((const uint64_t*)(test.c_str()) + 0)), //The number of these process_immediate lines depend on the length of the string ignoring '\0': floor((length + 7) / 8)
 		mach::process_immediate(*((const uint64_t*)(test.c_str()) + 1)),
 		mach::print(0, 0),
 		mach::set_hash_reg((uint32_t)0),
@@ -72,14 +72,14 @@ int main() {
 		mach::set(0x83, 0, false),
 		mach::CMP(0, 1),
 		mach::print(0x07, 0),
-		mach::conditional_jump(0x04 << 8, -5), //jump not equal //LOOP: 5 lines up
+		mach::conditional_jump(0x04 << 8, -5), //jump not equal //LOOP: 5 lines up (does not increment program counter if jumping)
 		mach::hash_store(8),
 		mach::hash_load(8),
 		mach::keccak256(8),
 		mach::print(0x86, 0),
 		mach::hash_store(8),
 		mach::set_index_reg((uint32_t)0),
-		mach::jump_return(),
+		mach::jump_return(), //returns from a function call (to instruction 0 in this case) then increments the program counter
 	};
 
 	m.run_till_stop(instructions);

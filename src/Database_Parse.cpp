@@ -183,7 +183,7 @@ database_state::database_state(const EasyArray<structure_definition>& structs, c
 		}
 		hash_maps.data[i] = hash_map(get_default_primitive_byte_size(index), hash_base_leng);
 	}
-
+	Log::conditional_log_quit(!validate_state(), __LINE__, __FILE__, "Invalid databse state on constructor");
 }
 
 database_state::~database_state() {
@@ -371,6 +371,7 @@ void database_state::file_to_state(std::string pathname, uint32_t hash_base_leng
 
 
 	read::free_reader(f);
+	Log::conditional_log_quit(!validate_state(), __LINE__, __FILE__, "Invalid databse state on read: "+pathname);
 }
 
 //database state file format is as follows:
@@ -399,3 +400,78 @@ void database_state::file_to_state(std::string pathname, uint32_t hash_base_leng
 	//TODO
 
 
+bool database_state::validate_state() const{
+
+	for (uint32_t i = 0; i<structures.length; ++i){
+		uint32_t base_length = structures.data[i].struct_size;
+		uint16_t e_count = structures.data[i].element_count;
+		if(e_count == 0 || base_length == 0){
+			Log::log_warning(__LINE__, __FILE__, "Struct cannot be empty: "+std::to_string(i|0x10000000));
+			return false;
+		}
+		uint32_t verifier_length = 0;
+		for(uint32_t ii = 0; ii<e_count; ++ii){
+			uint32_t temp_offset = structures.data[i].byte_offset.data[ii];
+			type_definition temp_def = structures.data[i].element_type.data[ii];
+			if(verifier_length != temp_offset){
+				Log::log_warning(__LINE__, __FILE__, "Struct intermediate length missmatch: "+std::to_string(i|0x10000000));
+				return false;
+			}
+			if(temp_def.length == 0){
+				Log::log_warning(__LINE__, __FILE__, "Structs cannot contain arrays or NULL entries: "+std::to_string(i|0x10000000));
+				return false;
+			}
+			if(temp_def.type_index >= 0x10000000){
+				if(temp_def.type_index >= (i | 0x10000000)){
+					Log::log_warning(__LINE__, __FILE__, "Structs cannot refrence structs of a greater or equal index: "+std::to_string(i|0x10000000)+", "+std::to_string(temp_def.type_index));
+					return false;
+				}
+				if(structures.data[0x10000000^temp_def.type_index].struct_size!=temp_def.length){
+					Log::log_warning(__LINE__, __FILE__, "Struct element length error: "+std::to_string(i|0x10000000));
+					return false;
+				}
+			}
+			else{
+				if(get_default_primitive_byte_size(temp_def.type_index)!=temp_def.length){
+					Log::log_warning(__LINE__, __FILE__, "Struct element length error: "+std::to_string(i|0x10000000));
+					return false;
+				}
+			}
+			verifier_length += temp_def.length;
+		}
+		if(verifier_length!=base_length){
+			Log::log_warning(__LINE__, __FILE__, "Struct overall length error: "+std::to_string(i|0x10000000));
+		}
+	}
+	for (uint32_t i = 0; i<hash_maps.length; ++i){
+		//This function will only verify the structure of the hash tables, but not the hash values themselves
+		//If the values were added appropriately, then this should not be an issue
+		uint32_t type_index = hash_map_type_indexes.data[i];
+		uint32_t type_size = hash_maps.data[i].type_size;
+		//uint32_t pleng = hash_maps.data[i].partial_hash_map.length;
+		if(type_index >= 0x10000000){
+			if(type_size == 0){
+				Log::log_warning(__LINE__, __FILE__, "Cannot have hash arrays of structs: "+std::to_string(i));
+				return false;
+			}
+			if((type_index ^ 0x10000000) >= structures.length){
+				Log::log_warning(__LINE__, __FILE__, "Invalid hash structure index: "+std::to_string(i));
+				return false;
+			}
+			if(type_size != structures.data[type_index ^ 0x10000000].struct_size){
+				Log::log_warning(__LINE__, __FILE__, "Structure size hash missmatch: "+std::to_string(i));
+				return false;
+			}
+		}
+		else{
+			if(get_default_primitive_byte_size(type_index)!=type_size){
+				Log::log_warning(__LINE__, __FILE__, "Primitive hash size missmatch: "+std::to_string(i));
+				return false;
+			}
+		}
+	}
+	for (uint32_t i = 0; i<global_variables.length; ++i){
+		//TODO
+	}
+	return true;
+}
